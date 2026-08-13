@@ -62,6 +62,18 @@ def _state_list():
     return sorted(load_cities()["state_id"].unique().tolist())
 
 
+@st.cache_data(ttl=30, show_spinner=False)
+def _shared_calls(url):
+    """Cached read of the shared Google Sheet (re-checks at most every 30s)."""
+    from nichefinder.sheets import fetch_calls
+    return fetch_calls(url)
+
+
+def _sheet_url():
+    c = Cache()
+    return (c.get_setting("sheet_url", "") or env.get("sheet_webhook", "")).strip()
+
+
 st.title("📞 No-Site Finder")
 st.caption("Find businesses that are on Google but have no real website — your cold-call list.")
 
@@ -76,6 +88,18 @@ st.caption(f"Cities file: `{cities_source().name}`")
 # ---------------- sidebar ----------------
 with st.sidebar:
     st.header("Find leads")
+
+    # Who's on the app right now — labels your calls in the shared sheet so you
+    # both know who dialed whom. Session-only, so Tate and Ben never overwrite
+    # each other even though they share one hosted app.
+    _default_caller = (env.get("caller_name") or "").strip()
+    _who_opts = ["Tate", "Ben"]
+    if _default_caller and _default_caller not in _who_opts:
+        _who_opts = [_default_caller] + _who_opts
+    _who_idx = _who_opts.index(_default_caller) if _default_caller in _who_opts else 0
+    st.session_state["caller"] = st.selectbox(
+        "I'm calling as", _who_opts, index=_who_idx,
+        help="Tags your calls in the shared sheet so you both know who called whom.")
 
     niche_keys = list(cfg["niches"].keys())
     niche = st.selectbox(
@@ -183,9 +207,36 @@ if not leads:
 
 # ---------------- call list (editable) ----------------
 df = pd.DataFrame(leads)
-saved = Cache().load_call_statuses()
-df["called"] = df["place_id"].map(lambda p: saved.get(p, {}).get("called", False))
-df["notes"] = df["place_id"].map(lambda p: saved.get(p, {}).get("notes", ""))
+saved = Cache().load_call_statuses()          # this computer's local log
+
+# If a shared Google Sheet is set up, it's the source of truth: read it back so
+# both partners see the same 'Called?' marks. Fail-safe — if it can't be reached
+# we just show the local marks and say so.
+sheet_url = _sheet_url()
+shared, sync_err = ({}, "")
+if sheet_url:
+    shared, sync_err = _shared_calls(sheet_url)
+
+def _state_for(pid):
+    if pid in shared:                         # shared sheet wins when present
+        return shared[pid]
+    return saved.get(pid, {})
+
+df["called"] = df["place_id"].map(lambda p: _state_for(p).get("called", False))
+df["notes"] = df["place_id"].map(lambda p: _state_for(p).get("notes", ""))
+if sheet_url:
+    df["called_by"] = df["place_id"].map(lambda p: shared.get(p, {}).get("called_by", ""))
+    if sync_err:
+        st.caption(f"⚠️ Couldn't reach the shared sheet just now — showing this "
+                   f"computer's marks. ({sync_err})")
+    else:
+        _team = sum(1 for v in shared.values() if v.get("called"))
+        cc, cr = st.columns([4, 1])
+        cc.caption(f"🔗 Synced with your shared Google Sheet — {_team} call(s) "
+                   f"logged by the team. Marks update for both of you.")
+        if cr.button("🔄 Refresh", use_container_width=True):
+            _shared_calls.clear()
+            st.rerun()
 
 pretty = {"HOT": "🔥 HOT", "WARM": "⭐ WARM", "COOL": "▫️ COOL"}
 df["priority"] = df["priority"].map(lambda p: pretty.get(p, p))
@@ -194,9 +245,9 @@ st.subheader("Your call list — highest-priority first")
 st.caption("Tick **Called?** and jot **Notes** as you dial, then hit 💾 Save. "
            "It remembers across runs (keyed to each Google listing).")
 
-view_cols = ["called", "priority", "score", "name", "phone", "website_status",
-             "rating", "reviews", "city", "state", "address", "maps_url", "notes",
-             "place_id"]
+view_cols = ["called", "called_by", "priority", "score", "name", "phone",
+             "website_status", "rating", "reviews", "city", "state", "address",
+             "maps_url", "notes", "place_id"]
 view_cols = [c for c in view_cols if c in df.columns]
 
 edited = st.data_editor(
@@ -204,6 +255,7 @@ edited = st.data_editor(
     key="call_editor",
     column_config={
         "called": st.column_config.CheckboxColumn("Called?"),
+        "called_by": st.column_config.TextColumn("By", width="small"),
         "priority": st.column_config.TextColumn("Priority", width="small"),
         "score": st.column_config.NumberColumn("Score", format="%d", width="small"),
         "name": st.column_config.TextColumn("Business", width="large"),
@@ -216,16 +268,14 @@ edited = st.data_editor(
         "notes": st.column_config.TextColumn("Notes", width="large"),
         "place_id": None,   # hide, but keep it for saving
     },
-    disabled=["priority", "score", "name", "phone", "website_status", "rating",
-              "reviews", "city", "state", "address", "maps_url"],
+    disabled=["called_by", "priority", "score", "name", "phone", "website_status",
+              "rating", "reviews", "city", "state", "address", "maps_url"],
 )
 
 col_save, col_dl = st.columns([1, 3])
 if col_save.button("💾  Save call log", use_container_width=True):
     cache = Cache()
-    sheet_url = cache.get_setting("sheet_url", "") or env.get("sheet_webhook", "")
-    caller = cache.get_setting("caller_name", "") or env.get("caller_name", "")
-    prior = cache.load_call_statuses()          # to know what's already been sent
+    caller = st.session_state.get("caller", "") or env.get("caller_name", "")
     saved_n, sent_n, errs = 0, 0, []
     with st.spinner("Saving…"):
         for _, r in edited.iterrows():
@@ -235,8 +285,14 @@ if col_save.button("💾  Save call log", use_container_width=True):
             if called or note.strip():
                 cache.save_call_status(pid, called, note)
                 saved_n += 1
-            # send to the shared Google Sheet: each called row once
-            if sheet_url and called and not prior.get(pid, {}).get("posted", False):
+            # Push to the shared sheet only when something changed vs. what's
+            # already there (the sheet upserts by place_id, so no duplicates).
+            if sheet_url and called:
+                prev = shared.get(pid, {})
+                unchanged = (prev.get("called") and prev.get("notes", "") == note
+                             and prev.get("called_by", "") == caller)
+                if unchanged:
+                    continue
                 payload = {
                     "business": r.get("name", ""), "phone": r.get("phone", ""),
                     "website_status": r.get("website_status", ""),
@@ -255,7 +311,8 @@ if col_save.button("💾  Save call log", use_container_width=True):
                     errs.append(msg)
     done = f"Saved {saved_n} call-log entries."
     if sheet_url:
-        done += f"  Sent {sent_n} new call(s) to the shared Google Sheet."
+        done += f"  Sent {sent_n} update(s) to the shared Google Sheet."
+        _shared_calls.clear()   # so the refreshed marks show for both of you
     st.success(done)
     if errs:
         st.warning("Some rows didn't reach the sheet (check the link): " + errs[0])
