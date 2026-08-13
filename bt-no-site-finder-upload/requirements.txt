@@ -1,0 +1,7 @@
+# Niche Finder dependencies — install with:  python3 -m pip install -r requirements.txt
+requests>=2.31        # calls DataForSEO + Google Places APIs
+pandas>=2.0           # loads the cities CSV, builds the results table
+pyyaml>=6.0           # reads config.yaml
+python-dotenv>=1.0    # reads your API keys from the .env file
+streamlit>=1.30       # the local web dashboard
+openpyxl>=3.1         # lets pandas export results to .xlsx (Excel)

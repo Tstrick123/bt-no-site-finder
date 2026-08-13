@@ -1,0 +1,30 @@
+city,state_id,state_name,county_name,population,lat,lng,timezone,ranking
+St. George,UT,Utah,Washington,100000,37.1041,-113.5841,America/Denver,2
+Washington,UT,Utah,Washington,30000,37.1303,-113.5083,America/Denver,3
+Hurricane,UT,Utah,Washington,20000,37.1753,-113.2899,America/Denver,3
+Cedar City,UT,Utah,Iron,37000,37.6775,-113.0619,America/Denver,3
+Ivins,UT,Utah,Washington,9500,37.1683,-113.6794,America/Denver,3
+Santa Clara,UT,Utah,Washington,8000,37.1330,-113.6541,America/Denver,3
+Kanab,UT,Utah,Kane,5000,37.0475,-112.5263,America/Denver,3
+Mesquite,NV,Nevada,Clark,22000,36.8055,-114.0672,America/Los_Angeles,3
+Salt Lake City,UT,Utah,Salt Lake,200000,40.7608,-111.8910,America/Denver,1
+West Valley City,UT,Utah,Salt Lake,140000,40.6916,-112.0011,America/Denver,2
+Provo,UT,Utah,Utah,115000,40.2338,-111.6585,America/Denver,2
+Orem,UT,Utah,Utah,98000,40.2969,-111.6946,America/Denver,2
+Ogden,UT,Utah,Weber,87000,41.2230,-111.9738,America/Denver,2
+Sandy,UT,Utah,Salt Lake,96000,40.5649,-111.8380,America/Denver,2
+Layton,UT,Utah,Davis,81000,41.0602,-111.9711,America/Denver,2
+Lehi,UT,Utah,Utah,75000,40.3916,-111.8508,America/Denver,2
+Logan,UT,Utah,Cache,52000,41.7370,-111.8338,America/Denver,3
+Herriman,UT,Utah,Salt Lake,55000,40.5141,-112.0329,America/Denver,3
+Eagle Mountain,UT,Utah,Utah,50000,40.3141,-112.0069,America/Denver,3
+Draper,UT,Utah,Salt Lake,48000,40.5247,-111.8638,America/Denver,3
+Riverton,UT,Utah,Salt Lake,45000,40.5219,-111.9391,America/Denver,3
+Bountiful,UT,Utah,Davis,45000,40.8894,-111.8808,America/Denver,3
+Spanish Fork,UT,Utah,Utah,42000,40.1150,-111.6549,America/Denver,3
+Tooele,UT,Utah,Tooele,35000,40.5308,-112.2983,America/Denver,3
+Cottonwood Heights,UT,Utah,Salt Lake,34000,40.6197,-111.8102,America/Denver,3
+Vernal,UT,Utah,Uintah,10000,40.4555,-109.5287,America/Denver,3
+Richfield,UT,Utah,Sevier,8000,38.7725,-112.0838,America/Denver,3
+Price,UT,Utah,Carbon,8000,39.5994,-110.8107,America/Denver,3
+Moab,UT,Utah,Grand,5300,38.5733,-109.5498,America/Denver,3

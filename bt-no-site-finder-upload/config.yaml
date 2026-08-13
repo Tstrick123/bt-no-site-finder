@@ -1,0 +1,507 @@
+# ============================================================================
+#  NICHE FINDER — configuration
+#  Everything the scanner needs is here. Edit this file, not the code.
+#  The niche library below was built from live research (Aug 2026): real
+#  buyer-intent keywords, national CPC, job value, saturation, and a verdict.
+# ============================================================================
+
+settings:
+  # --- City universe (Gate B geography) ---
+  population_min: 15000        # floor: 15k so small satellite towns (Hurricane UT) qualify
+  population_max: 400000       # ceiling: above this the big-city field is too strong to rank cheaply
+
+  # --- Gate A: niche qualifier — TICKET-BASED (your $1k+ rule) ---
+  min_job_value: 1000          # a niche qualifies if its jobs can reach this (uses the HIGH end of its range).
+                               # You qualify individual jobs at the sales level; anything $1k+ is worth working.
+  min_national_cpc: 5.0        # informational only now — CPC still feeds the Value score, but is NO LONGER a hard gate
+                               # (so high-ticket / lower-CPC niches like weddings still qualify).
+
+  # --- Gate B: per-city demand ---
+  min_city_volume: 100         # aggregate monthly searches (all keywords) a city must clear to advance to Tier-2
+
+  # --- CPC display only: metro-tier multiplier (per-city CPC is NOT reliable; this just
+  #      re-creates the real big-vs-small-market spread for display, off the national number) ---
+  metro_multipliers:
+    large: 1.7                 # population >= 250k
+    mid: 1.0                   # 60k–250k
+    small: 0.8                 # < 60k
+
+  # --- Composite opportunity score weights (must sum to 1.0) ---
+  weights:
+    rankability: 0.40          # "can I actually rank here?" — dominates for rank-and-rent
+    demand: 0.30               # search volume
+    value: 0.30                # click/lead value
+
+  # --- Normalization reference points ---
+  volume_ref: 5000             # a city hitting this monthly volume scores ~100 on demand
+  cpc_ref: 20.0                # a niche at this CPC scores ~100 on value
+
+  # --- Rent-potential ($/mo) model — turns the score into a dollar figure ---
+  lead_model:
+    click_through_rate: 0.15   # share of searchers who click our ranked result
+    lead_conversion: 0.05      # share of clicks that become a real lead
+    close_rate: 0.25           # share of leads the contractor closes
+    margin: 0.40               # contractor's margin on a job
+
+  # --- Verdict bands (composite score) ---
+  verdict_bands:
+    go: 70                     # >= 70  -> GO
+    maybe: 45                  # 45–69  -> MAYBE ;  < 45 -> AVOID
+
+# ============================================================================
+#  REGION PRESETS — named city filters you can pick in the dashboard / CLI
+# ============================================================================
+regions:
+  st_george:
+    label: "St. George / SW Utah (MVP validation region)"
+    states: [UT, NV]
+    population_min: 5000       # override: let the small SW-Utah towns in for the MVP
+    include_only: [Saint George, St. George, St George, Washington, Hurricane, Cedar City, Ivins, Santa Clara, Mesquite, Kanab]
+  utah:
+    label: "All Utah cities"
+    states: [UT]
+  national_25k:
+    label: "All US cities 25k+ (~2,000 cities)"
+    population_min: 25000
+
+# ============================================================================
+#  NICHE LIBRARY  (16 home-service niches, research-verified Aug 2026)
+#  keywords have NO city in them; the scanner appends the city per lookup.
+#  national_cpc gates the niche (Gate A). job_value drives rent-potential ($).
+#  recommended:false = economics look good but too saturated for a FIRST build.
+# ============================================================================
+niches:
+  insulation:
+    display_name: "Spray Foam / Retrofit Insulation"
+    category: insulation
+    keywords: [spray foam insulation, attic insulation, crawl space insulation, blown in insulation, insulation contractor, insulation removal, insulation installation cost, spray foam insulation near me, insulation company]
+    national_cpc: 8.0
+    job_value: 4000
+    job_value_low: 1500
+    job_value_high: 12000
+    lead_value: 85
+    saturation: medium
+    recommended: true
+    verdict: "Boring retrofit niche, high job values, light licensing, less saturated than roofing/turf. Your validated flag niche (Chris)."
+
+  concrete_leveling:
+    display_name: "Concrete Leveling / Mudjacking"
+    category: concrete
+    keywords: [concrete leveling, mudjacking, concrete leveling near me, concrete lifting, polyjacking, sinking concrete repair, concrete leveling company, mudjacking contractor, concrete leveling cost, driveway leveling]
+    national_cpc: 9.0
+    job_value: 2000
+    job_value_low: 600
+    job_value_high: 3500
+    lead_value: 75
+    saturation: low
+    recommended: true
+    verdict: "Low-saturation, poorly-optimized GBPs, above-average CPC. Ideal rank-and-rent target (your engine #2, Hurricane)."
+
+  epoxy_flooring:
+    display_name: "Epoxy Garage Floor Coating"
+    category: flooring
+    keywords: [epoxy garage floor coating, garage floor epoxy, epoxy flooring contractor, garage floor coating near me, epoxy garage floor cost, concrete floor coating, polyaspartic garage floor coating, epoxy floor installation, garage floor coating company]
+    national_cpc: 11.0
+    job_value: 3500
+    job_value_low: 1600
+    job_value_high: 8000
+    lead_value: 75
+    saturation: medium
+    recommended: true
+    verdict: "High-ticket, low licensing, growing demand, still-thin competition in mid-size markets. Claim territory before it saturates."
+
+  foundation_repair:
+    display_name: "Foundation Repair"
+    category: foundation
+    keywords: [foundation repair, foundation repair near me, foundation repair contractor, foundation repair company, foundation crack repair, house leveling, slab foundation repair, basement foundation repair, pier and beam foundation repair, foundation repair cost]
+    national_cpc: 38.0
+    job_value: 7000
+    job_value_low: 2500
+    job_value_high: 15000
+    lead_value: 90
+    saturation: medium
+    recommended: true
+    verdict: "Huge job values and lead value, specialized trade with few local players. Lower per-city volume (episodic) and pricey ads."
+
+  basement_waterproofing:
+    display_name: "Basement Waterproofing"
+    category: waterproofing
+    keywords: [basement waterproofing, wet basement repair, basement waterproofing contractor, basement waterproofing company, basement waterproofing cost, foundation waterproofing, basement leak repair, waterproofing near me, french drain installation, interior basement waterproofing]
+    national_cpc: 11.0
+    job_value: 6000
+    job_value_low: 2500
+    job_value_high: 15000
+    lead_value: 75
+    saturation: medium
+    recommended: true
+    verdict: "High-ticket, urgent, not license-gated. Strong where basements are common — WEAK in the desert SW (few basements)."
+
+  water_fire_restoration:
+    display_name: "Water & Fire Damage Restoration"
+    category: restoration
+    keywords: [water damage restoration, water damage restoration near me, fire damage restoration, flood damage cleanup, emergency water removal, water damage restoration company, water damage repair cost, basement flood cleanup, smoke damage restoration, fire and water restoration contractor]
+    national_cpc: 50.0
+    job_value: 5000
+    job_value_low: 1500
+    job_value_high: 15000
+    lead_value: 400
+    saturation: high
+    recommended: false
+    verdict: "Elite per-lead economics ($400-600) BUT one of the most saturated niches — franchises, LSAs, agencies. Poor FIRST build unless a genuinely underserved small market."
+
+  tree_removal:
+    display_name: "Tree Removal & Trimming"
+    category: tree care
+    keywords: [tree removal, tree trimming, tree service near me, emergency tree removal, stump grinding, tree removal cost, tree removal company, tree trimming service, arborist near me, tree cutting service]
+    national_cpc: 17.0
+    job_value: 1200
+    job_value_low: 400
+    job_value_high: 2000
+    lead_value: 55
+    saturation: medium
+    recommended: true
+    verdict: "High CPC + emergency urgency = contractors pay $25-100/lead. Light licensing, big pool of small operators to rent to."
+
+  junk_removal:
+    display_name: "Junk Removal & Hauling"
+    category: junk removal
+    keywords: [junk removal, junk removal near me, junk hauling, furniture removal, appliance removal, junk removal company, junk removal cost, same day junk removal, trash removal service]
+    national_cpc: 12.0
+    job_value: 400
+    job_value_low: 150
+    job_value_high: 700
+    lead_value: 50
+    saturation: medium
+    recommended: true
+    verdict: "High demand, minimal licensing so contractors sign easily, healthy $30-65 lead value. Modest ticket is the only knock."
+
+  gutter_installation:
+    display_name: "Gutter Installation & Guards"
+    category: exterior
+    keywords: [gutter installation, seamless gutter installation, gutter guard installation, gutter installation near me, gutter contractor, gutter installation cost, leaf guard installation, gutter replacement, gutter installation company]
+    national_cpc: 12.0
+    job_value: 2200
+    job_value_low: 800
+    job_value_high: 4500
+    lead_value: 55
+    saturation: medium
+    recommended: true
+    verdict: "Healthy CPC, $800-4500 jobs, light licensing, most local gutter companies have weak SEO. Lower bar than roofing/turf."
+
+  artificial_turf:
+    display_name: "Artificial Turf Installation"
+    category: landscaping
+    keywords: [artificial turf installation, artificial grass installation, synthetic grass installation, turf installation near me, artificial turf installers, artificial grass company, putting green installation, pet turf installation, artificial turf cost, backyard turf installation]
+    national_cpc: 7.0
+    job_value: 8000
+    job_value_low: 3000
+    job_value_high: 20000
+    lead_value: 175
+    saturation: high
+    recommended: false
+    verdict: "Great ticket ($3k-20k) BUT the MOST saturated home-service niche for local SEO — entrenched installers + dedicated agencies. Slow to rank."
+
+  fencing:
+    display_name: "Fencing Installation"
+    category: exterior
+    keywords: [fence installation, fence company near me, fence contractor, vinyl fence installation, wood fence installation, chain link fence installation, privacy fence installation, fence installation cost, fence repair, fence builders near me]
+    national_cpc: 8.0
+    job_value: 4500
+    job_value_low: 2000
+    job_value_high: 10000
+    lead_value: 55
+    saturation: medium
+    recommended: true
+    verdict: "Steady demand, $2k-10k jobs, low licensing, mostly weak local SEO (most fence pros lean on Angi/word-of-mouth)."
+
+  window_replacement:
+    display_name: "Window Replacement"
+    category: exterior
+    keywords: [window replacement, window replacement near me, replacement windows, window installation, window replacement companies, window replacement cost, window replacement contractor, vinyl window replacement, energy efficient windows, home window replacement]
+    national_cpc: 22.0
+    job_value: 8000
+    job_value_low: 1000
+    job_value_high: 15000
+    lead_value: 120
+    saturation: high
+    recommended: true
+    verdict: "Excellent lead economics but heavily saturated with national franchises + high CPC. Pays off in 100k-500k markets, 6-12mo horizon."
+
+  siding:
+    display_name: "Siding Installation"
+    category: exterior
+    keywords: [siding installation, siding contractor, siding replacement, vinyl siding installation, siding companies near me, siding installation cost, fiber cement siding installation, siding repair near me]
+    national_cpc: 10.0
+    job_value: 12000
+    job_value_low: 6000
+    job_value_high: 25000
+    lead_value: 120
+    saturation: medium
+    recommended: true
+    verdict: "Big-ticket exterior remodel, strong local intent, competition a notch below roofing/turf. Solid if you can out-rank local siding pros."
+
+  pressure_washing:
+    display_name: "Pressure / Soft Washing"
+    category: exterior
+    keywords: [pressure washing, house pressure washing, soft washing, driveway cleaning, roof cleaning, power washing services, pressure washing near me, pressure washing company, pressure washing cost, concrete cleaning]
+    national_cpc: 7.4
+    job_value: 400
+    job_value_low: 150
+    job_value_high: 1200
+    lead_value: 50
+    saturation: high
+    recommended: true
+    verdict: "Easy to rank/sell in a small market like St. George, but ~$300 avg ticket + heavy saturation (the classic beginner niche) cap value."
+
+  garage_door_repair:
+    display_name: "Garage Door Repair & Installation"
+    category: exterior
+    keywords: [garage door repair, garage door spring repair, garage door opener repair, garage door installation, garage door replacement, broken garage door spring, emergency garage door repair, garage door repair near me, garage door company, garage door repair cost]
+    national_cpc: 13.0
+    job_value: 800
+    job_value_low: 180
+    job_value_high: 2500
+    lead_value: 45
+    saturation: medium
+    recommended: true
+    verdict: "High-intent, emergency-driven, strong lead economics, light licensing. Excellent rank-and-rent play despite more competition than concrete leveling."
+
+  drain_cleaning:
+    display_name: "Drain Cleaning / Rooter Plumbing"
+    category: plumbing
+    keywords: [drain cleaning, drain cleaning near me, clogged drain repair, rooter service, sewer line cleaning, hydro jetting service, emergency drain cleaning, main sewer line cleaning, drain cleaning company, unclog drain service]
+    national_cpc: 18.0
+    job_value: 450
+    job_value_low: 150
+    job_value_high: 1000
+    lead_value: 60
+    saturation: high
+    recommended: true
+    verdict: "Urgent, high-intent, call-driven, survives AI Overviews. But plumbing is very saturated — target drain-specific longtail in mid-size cities, not 'plumber' in a big metro."
+
+  # ======================================================================
+  #  Added 2026-07-24 — deep-dive on HIDDEN / high-success rank-and-rent
+  #  niches (incl. stump removal + wedding/event angle). ⚠ = good economics
+  #  but too saturated / gated for a small operator's FIRST build.
+  # ======================================================================
+  stump_removal:
+    display_name: "Stump Removal & Stump Grinding"
+    category: tree care
+    keywords: [stump grinding near me, stump removal near me, stump grinding cost, stump removal service, stump grinding company, tree stump removal, stump grinding contractor, tree and stump removal near me]
+    national_cpc: 8.0
+    job_value: 500
+    job_value_low: 150
+    job_value_high: 1500
+    lead_value: 35
+    saturation: medium
+    recommended: true
+    verdict: "Good first build: stump-specific keywords are far less saturated than the broad tree-service SERP, low licensing, solid bundling upside with tree removal. Low ticket = win on volume. (You asked for this one.)"
+
+  party_event_rental:
+    display_name: "Party, Event & Tent Rental (wedding angle)"
+    category: events
+    keywords: [party rental near me, tent rental for wedding, event rental company, wedding tent rental cost, table and chair rental near me, bounce house rental near me, party equipment rental company, event tent rental near me, tent and table rental]
+    national_cpc: 4.5
+    job_value: 1200
+    job_value_low: 200
+    job_value_high: 5000
+    lead_value: 50
+    saturation: medium
+    recommended: true
+    verdict: "Wedding/event VENUES are fixed single buildings — can't be rank-and-rented. The winnable angle is interchangeable party/event/tent rental: light licensing, $200-5k tickets, beatable map pack. Seasonal (spring-summer) is the caveat. CPC just under $5. (This is the venue answer.)"
+
+  septic_services:
+    display_name: "Septic Pumping, Repair & Installation"
+    category: home services
+    keywords: [septic tank pumping near me, septic tank pumping cost, septic system repair, septic tank cleaning service, septic system installation, new septic system cost, emergency septic service, drain field repair, septic pumping company, septic contractor near me]
+    national_cpc: 12.0
+    job_value: 3000
+    job_value_low: 300
+    job_value_high: 15000
+    lead_value: 65
+    saturation: medium
+    recommended: true
+    verdict: "Under-the-radar favorite of the pros. Non-discretionary demand, recurring pumping + high-ticket installs, in rural/exurban markets far less SEO-saturated than plumbing/HVAC/roofing. Owners rarely market. Strong first build."
+
+  standby_generator:
+    display_name: "Whole-House Standby Generator Install"
+    category: electrical
+    keywords: [whole house generator installation, standby generator installation, generac generator installation, whole house generator installers near me, standby generator installation cost, backup generator installation company, generac dealer near me, home generator installation contractor, whole house generator cost installed, generator installation near me]
+    national_cpc: 14.0
+    job_value: 9000
+    job_value_low: 6500
+    job_value_high: 18000
+    lead_value: 150
+    saturation: medium
+    recommended: true
+    verdict: "High-ticket ($6.5k-18k), rising outage-driven demand, each exclusive lead worth $100-250. Limited pool of certified Generac/Kohler dealers keeps competition medium. Catch: renters must be licensed/certified."
+
+  well_drilling:
+    display_name: "Well Drilling & Well Pump Repair"
+    category: water well
+    keywords: [well pump repair near me, well pump replacement cost, well drilling contractor, well drilling company near me, emergency well pump service, no water from well, well pump not working, water well drilling near me, well repair company]
+    national_cpc: 9.5
+    job_value: 3500
+    job_value_low: 450
+    job_value_high: 15000
+    lead_value: 90
+    saturation: low
+    recommended: true
+    verdict: "High-ticket + urgent ('no water' emergencies + $7.5k-15k new wells), modest CPC, very low competition in rural well-water regions. Strong first build — line up a licensed well contractor as the buyer."
+
+  dock_boat_lift:
+    display_name: "Dock & Boat Lift Install & Repair"
+    category: waterfront
+    keywords: [boat dock installation, boat dock installation near me, boat lift installation, dock repair near me, boat lift repair, dock builder near me, seasonal dock removal and installation, boat dock company, boat dock installation cost, dock and boat lift contractor]
+    national_cpc: 7.5
+    job_value: 6000
+    job_value_low: 500
+    job_value_high: 30000
+    lead_value: 100
+    saturation: low
+    recommended: true
+    verdict: "Near-total blue ocean: big-ticket installs ($3k-30k) + sticky recurring seasonal removal/reinstall, affluent waterfront owners, almost no local SEO competition. Only works in a genuine lake/coastal geography; seasonal up north."
+
+  ev_charger_installation:
+    display_name: "EV Charger Installation (Level 2)"
+    category: electrical
+    keywords: [ev charger installation near me, level 2 ev charger installation, home ev charger installer, electric car charger installation, ev charger installation cost, ev charger installation contractor, tesla charger installation, ev charging station installer near me, ev charger installation company]
+    national_cpc: 8.5
+    job_value: 1500
+    job_value_low: 800
+    job_value_high: 3500
+    lead_value: 85
+    saturation: low
+    recommended: true
+    verdict: "Most electricians haven't optimized for it yet = low map-pack competition, solid $800-3.5k tickets. Per-city volume tracks local EV adoption, so favors EV-heavy metros or pairs with a broader electrician site."
+
+  land_clearing:
+    display_name: "Land Clearing & Excavation / Grading"
+    category: excavation
+    keywords: [land clearing near me, land clearing services, land clearing contractors, excavation contractors near me, excavating company near me, site grading contractor, dirt work contractors, land grading services, lot clearing cost, excavation and grading company]
+    national_cpc: 9.0
+    job_value: 5000
+    job_value_low: 1500
+    job_value_high: 25000
+    lead_value: 90
+    saturation: medium
+    recommended: true
+    verdict: "Very high tickets ($3k-30k), only medium saturation — most excavation/dirt-work contractors have weak websites + GBP, so they're lead-starved and easy to rent to."
+
+  chimney_sweep:
+    display_name: "Chimney Sweep, Inspection & Repair"
+    category: home services
+    keywords: [chimney sweep near me, chimney cleaning service, chimney inspection cost, chimney repair contractor, chimney relining cost, chimney sweep company, fireplace cleaning near me, chimney flue repair, cost to reline chimney, chimney sweep and inspection]
+    national_cpc: 8.0
+    job_value: 800
+    job_value_low: 150
+    job_value_high: 5000
+    lead_value: 65
+    saturation: medium
+    recommended: true
+    verdict: "Less saturated than HVAC/roofing/plumbing — rank in 60-90 days. Reliable fall/winter safety intent + high-ticket relining ($1.5k-5k) = leads worth $60-120. Seasonal is the caveat."
+
+  mobile_rv_repair:
+    display_name: "Mobile RV Repair & Mobile Mechanic"
+    category: automotive
+    keywords: [mobile mechanic near me, mobile rv repair near me, mobile mechanic cost, on site rv repair service, mobile auto repair near me, rv repair mobile tech, mobile mechanic company, emergency mobile mechanic, rv repair near me]
+    national_cpc: 6.0
+    job_value: 500
+    job_value_low: 150
+    job_value_high: 1500
+    lead_value: 45
+    saturation: medium
+    recommended: true
+    verdict: "Low-barrier, fast-growing, no heavy licensing. Mobile-mechanic is competitive in big metros, but the under-served RV-repair angle + small/mid markets make it winnable."
+
+  christmas_lights:
+    display_name: "Christmas / Holiday Light Installation"
+    category: seasonal
+    keywords: [christmas light installation, christmas light installers near me, holiday light installation, professional christmas light installation, christmas light hanging service, christmas light installation company, christmas light installation cost, holiday light installers near me, christmas light installation contractor]
+    national_cpc: 5.5
+    job_value: 700
+    job_value_low: 300
+    job_value_high: 1500
+    lead_value: 55
+    saturation: low
+    recommended: true
+    verdict: "Low saturation, no licensing, intense Q4 spike. Build and rank cheaply off-season, rent hot in Nov-Dec. Revenue concentrated into ~3 months is the trade-off."
+
+  biohazard_cleanup:
+    display_name: "Biohazard & Crime Scene Cleanup"
+    category: specialty cleanup
+    keywords: [crime scene cleanup near me, biohazard cleanup services, unattended death cleanup, trauma scene cleanup company, blood cleanup service, suicide cleanup services, hoarding cleanup company, crime scene cleanup cost, biohazard cleanup contractor, dead body cleanup service]
+    national_cpc: 35.0
+    job_value: 4000
+    job_value_low: 1500
+    job_value_high: 15000
+    lead_value: 200
+    saturation: medium
+    recommended: false
+    verdict: "⚠ Outstanding per-job economics (insurance-paid $1.5k-15k, leads $50-900) BUT very low/sporadic per-city volume, scarce OSHA-certified tenants, and YMYL ranking difficulty make it a poor FIRST build."
+
+  pool_screen_enclosures:
+    display_name: "Pool Screen Cages & Patio Enclosures"
+    category: outdoor living
+    keywords: [pool cage rescreen, pool screen enclosure repair, screen enclosure contractor, rescreen pool cage near me, lanai screen enclosure cost, patio screen enclosure installation, pool enclosure company near me, screen enclosure repair near me, new pool cage cost, pool screen replacement]
+    national_cpc: 6.0
+    job_value: 4000
+    job_value_low: 1200
+    job_value_high: 25000
+    lead_value: 80
+    saturation: high
+    recommended: false
+    verdict: "⚠ Great tickets ($1.2k rescreens to $25k+ cages) + hurricane-driven demand, but Florida's market is brutally saturated with entrenched decade-old contractors dominating local SEO. Too competitive for a first build."
+
+  crawl_space_encapsulation:
+    display_name: "Crawl Space Encapsulation & Moisture Control"
+    category: waterproofing
+    keywords: [crawl space encapsulation, crawl space encapsulation near me, crawl space encapsulation cost, crawl space encapsulation contractor, crawl space encapsulation companies, crawl space vapor barrier installation, crawl space moisture control, crawl space dehumidifier installation, crawl space repair company]
+    national_cpc: 14.0
+    job_value: 5500
+    job_value_low: 3000
+    job_value_high: 15000
+    lead_value: 120
+    saturation: high
+    recommended: false
+    verdict: "⚠ Excellent economics (~$5.5k avg, leads $100+) but high CPC and dominated by well-funded regional franchises (Groundworks/JES, Alpha) in its core Southeast/pier-and-beam markets. A later niche, not a first build."
+
+  asbestos_removal:
+    display_name: "Residential Asbestos Removal & Abatement"
+    category: specialty remediation
+    keywords: [asbestos removal, asbestos removal near me, asbestos abatement contractor, asbestos removal cost, residential asbestos removal, asbestos removal company, asbestos testing and removal, licensed asbestos removal contractor, popcorn ceiling asbestos removal, asbestos tile removal]
+    national_cpc: 10.0
+    job_value: 2300
+    job_value_low: 1200
+    job_value_high: 3500
+    lead_value: 125
+    saturation: medium
+    recommended: false
+    verdict: "⚠ Strong economics (~$2.3k avg, high-intent deadline-driven searches) but heavy state abatement licensing shrinks the pool of contractors you can rent to, and demand is episodic. Poor first build."
+
+  porta_potty_rental:
+    display_name: "Porta-Potty / Portable Restroom Rental"
+    category: sanitation rental
+    keywords: [porta potty rental, portable toilet rental, porta potty rental near me, porta potty rental cost, construction porta potty rental, event porta potty rental, porta potty rental company, portable restroom rental, restroom trailer rental, porta potty rental prices]
+    national_cpc: 7.0
+    job_value: 800
+    job_value_low: 150
+    job_value_high: 3000
+    lead_value: 50
+    saturation: high
+    recommended: false
+    verdict: "⚠ Attractive (sticky recurring B2B contracts + events, $150-3k jobs) but mature national aggregators + niche SEO agencies already work these keywords hard and local tenant supply is thin. A strong 2nd/3rd niche, not a first."
+
+  # ---- Added 2026-07-24 — Tate's pick: pursue wedding venues as an untapped market ----
+  wedding_venues:
+    display_name: "Wedding Venues & Event Spaces"
+    category: events
+    keywords: [wedding venues near me, wedding venues, wedding reception venues, event venues near me, outdoor wedding venues, affordable wedding venues, banquet halls near me, barn wedding venues, wedding venue prices, small wedding venues]
+    national_cpc: 4.0
+    job_value: 6000
+    job_value_low: 2000
+    job_value_high: 15000
+    lead_value: 250
+    saturation: low
+    recommended: true
+    verdict: "Tate's pick — genuinely under-contested by rank-and-rent operators and high-ticket ($2k-15k+ bookings). Model nuance: a single venue is a fixed building, so classic exclusive-lead renting doesn't fit directly — monetize via (a) a multi-venue directory / featured listings, (b) renting inquiries to a wedding planner/coordinator, or (c) a marketing retainer with one venue. Lower CPC (~$4) but the ticket size is the whole point."
