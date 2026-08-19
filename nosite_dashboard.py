@@ -9,6 +9,7 @@ sell a website. Mark who you've called; download the list as a spreadsheet.
 """
 
 import os
+import secrets
 import sys
 from datetime import date
 
@@ -22,13 +23,58 @@ from nichefinder.cities import cities_source
 from nichefinder.config import load_config, load_env
 from nichefinder.nosite import (_places_mock, call_cost, category_queries,
                                 estimate_calls, find_leads)
-from nichefinder.sheets import (assign_lead, fetch_worked_place_ids, post_call)
+from nichefinder.sheets import (assign_lead, fetch_roster,
+                                fetch_worked_place_ids, onboard_rep, post_call)
 from nichefinder.theme import goal_background
+
+_PW_WORDS = ["red", "blue", "gold", "sun", "peak", "zion", "canyon", "summit",
+             "rock", "desert", "mesa", "ridge", "coral", "sage", "storm"]
 
 
 def _same_name(a, b):
     """Match rep/caller names the way the Apps Script does (trim + lowercase)."""
     return (a or "").strip().lower() == (b or "").strip().lower()
+
+
+def _gen_password():
+    """A short, friendly, copy-pasteable password (e.g. 'zion-coral-4f9a')."""
+    return (f"{secrets.choice(_PW_WORDS)}-{secrets.choice(_PW_WORDS)}-"
+            f"{secrets.token_hex(2)}")
+
+
+def _regen_pw():
+    # Runs as a button on_click callback (before the widget re-instantiates), so
+    # it's allowed to set the widget-keyed session value.
+    st.session_state["onb_pw"] = _gen_password()
+
+
+def _do_onboard():
+    """Onboard-button callback. Runs BEFORE the widgets re-instantiate, so it can
+    safely reset the name/password fields (a fresh password every time, so two
+    reps never share one). Stashes the result in onb_flash for display."""
+    url = _sheet_url()
+    name = (st.session_state.get("onb_name") or "").strip()
+    pw = st.session_state.get("onb_pw") or ""
+    reset = bool(st.session_state.get("onb_reset"))
+    who = st.session_state.get("caller", "") or env.get("caller_name", "")
+    if not url or not name:
+        st.session_state["onb_flash"] = {"error": "Enter the rep's name first."}
+        return
+    ok, info = onboard_rep(url, name, pw, created_by=who, reset=reset)
+    if ok:
+        _roster.clear()          # show the new rep in the Assign dropdown right away
+        st.session_state["onb_flash"] = {
+            "name": name, "pw": pw,
+            "verb": "Reset the password for" if info.get("updated") else "Onboarded"}
+        st.session_state["onb_pw"] = _gen_password()   # fresh password for the next rep
+        st.session_state["onb_name"] = ""
+        st.session_state["onb_reset"] = False
+    elif info.get("reason") == "rep_exists":
+        st.session_state["onb_flash"] = {"error":
+            f"A rep named '{name}' already exists. Turn ON 'Reset an existing "
+            "rep's password' below if you meant to change their password."}
+    else:
+        st.session_state["onb_flash"] = {"error": f"Couldn't onboard: {info.get('error') or info}"}
 
 st.set_page_config(page_title="No-Site Finder", page_icon="📞", layout="wide")
 
@@ -73,6 +119,12 @@ def _shared_calls(url):
     """Cached read of the shared Google Sheet (re-checks at most every 30s)."""
     from nichefinder.sheets import fetch_calls
     return fetch_calls(url)
+
+
+@st.cache_data(ttl=30, show_spinner=False)
+def _roster(url):
+    """Cached list of onboarded (active) rep names for the assign dropdown."""
+    return fetch_roster(url)
 
 
 def _sheet_url():
@@ -164,6 +216,38 @@ with st.sidebar:
             _c.set_setting("sheet_url", _url.strip())
             _c.set_setting("caller_name", _name.strip())
             st.success("Saved. Calls you log now go to the shared sheet.")
+
+    with st.expander("👥 Onboard a rep"):
+        _osu = _sheet_url()
+        if not _osu:
+            st.caption("Connect the shared Google Sheet above first, then you can "
+                       "create rep logins here.")
+        else:
+            # Result of the last onboard (stashed by the callback so it survives
+            # the rerun and stays on screen for the admin to copy).
+            _of = st.session_state.get("onb_flash")
+            if _of and _of.get("error"):
+                st.error(_of["error"])
+            elif _of:
+                st.success(f"✅ {_of['verb']} **{_of['name']}**.")
+                st.info("**Send them these 3 things:**\n\n"
+                        "1. Your Rep Portal link\n"
+                        f"2. Name: **{_of['name']}**\n"
+                        f"3. Password: **{_of['pw']}**")
+            st.caption("Create a login for a new salesperson. They use the **Rep "
+                       "Portal** — they never see this finder. After onboarding, "
+                       "pick them in the Assign panel to send leads.")
+            if "onb_pw" not in st.session_state:
+                st.session_state["onb_pw"] = _gen_password()
+            st.text_input("Rep's name", key="onb_name", placeholder="e.g. Ben")
+            st.text_input("Password (auto-filled — change it if you want)", key="onb_pw")
+            st.checkbox("Reset an existing rep's password", key="onb_reset",
+                        help="Leave OFF to add a NEW rep. Turn ON only to change "
+                             "the password of a rep who already exists.")
+            oc1, oc2 = st.columns(2)
+            oc1.button("🔄 New password", on_click=_regen_pw, use_container_width=True)
+            oc2.button("✅ Onboard rep", type="primary", on_click=_do_onboard,
+                       use_container_width=True)
 
 # ---------------- run ----------------
 if run:
@@ -360,17 +444,19 @@ if not sheet_url:
     st.caption("Connect the shared Google Sheet first (sidebar → 🔗 Shared Google "
                "Sheet) to hand leads to a rep.")
 else:
-    reps = [str(x) for x in (cfg.get("reps") or [])]
+    # Prefer the live roster (reps onboarded via the sidebar); fall back to the
+    # config list, then a free-typed name.
+    reps = _roster(sheet_url) or [str(x) for x in (cfg.get("reps") or [])]
     ac1, ac2, ac3 = st.columns([2, 1, 1])
     with ac1:
         if reps:
             rep_pick = st.selectbox("Assign to", reps + ["➕ someone else…"])
-            rep_name = (st.text_input("New rep's name (matches their portal login)")
+            rep_name = (st.text_input("New rep's name (onboard them first, above)")
                         if rep_pick == "➕ someone else…" else rep_pick)
         else:
             rep_name = st.text_input(
                 "Rep's name", placeholder="e.g. Ben",
-                help="Must match the name they log into the Rep Portal with.")
+                help="Onboard the rep first (sidebar → 👥 Onboard a rep) so they can log in.")
     with ac2:
         how_many = st.number_input("How many (top leads)", min_value=1,
                                    max_value=len(leads), value=min(40, len(leads)), step=1)

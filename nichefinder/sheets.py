@@ -121,3 +121,43 @@ def assign_lead(url, row, timeout=15):
             return True, {"assigned": True}   # older script with no JSON echo
     except Exception as e:
         return False, {"error": str(e)[:160]}
+
+
+def onboard_rep(url, name, password, created_by="", reset=False, timeout=15):
+    """Create a rep login in the shared sheet's 'Reps' tab (salted-SHA-256 hash).
+
+    reset=False (default) refuses to overwrite an existing name -> returns
+    (False, {"reason": "rep_exists"}). Pass reset=True to deliberately change an
+    existing rep's password. The password is never stored in the clear.
+    """
+    if not url:
+        return False, {"error": "no sheet configured"}
+    payload = {"action": "onboard", "name": name, "password": password,
+               "created_by": created_by, "reset": bool(reset)}
+    try:
+        r = requests.post(url, json=_with_token(payload), timeout=timeout)
+        if r.status_code not in (200, 201, 302):
+            return False, {"error": f"HTTP {r.status_code}: {r.text[:120]}"}
+        try:
+            info = r.json()
+        except Exception:
+            info = {"ok": True}
+        return bool(info.get("ok", True)), info
+    except Exception as e:
+        return False, {"error": str(e)[:160]}
+
+
+def fetch_roster(url, timeout=15):
+    """Active rep names from the sheet (for the assign dropdown). Returns list."""
+    if not url:
+        return []
+    try:
+        r = requests.get(url, params={"roster": "1"}, timeout=timeout)
+        if r.status_code != 200:
+            return []
+        data = r.json()
+        if isinstance(data, list):
+            return [str(x) for x in data if str(x).strip()]
+        return []
+    except Exception:
+        return []
