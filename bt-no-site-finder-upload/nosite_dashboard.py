@@ -9,7 +9,9 @@ sell a website. Mark who you've called; download the list as a spreadsheet.
 """
 
 import os
+import secrets
 import sys
+from datetime import date
 
 import pandas as pd
 import streamlit as st
@@ -21,8 +23,58 @@ from nichefinder.cities import cities_source
 from nichefinder.config import load_config, load_env
 from nichefinder.nosite import (_places_mock, call_cost, category_queries,
                                 estimate_calls, find_leads)
-from nichefinder.sheets import post_call
+from nichefinder.sheets import (assign_lead, fetch_roster,
+                                fetch_worked_place_ids, onboard_rep, post_call)
 from nichefinder.theme import goal_background
+
+_PW_WORDS = ["red", "blue", "gold", "sun", "peak", "zion", "canyon", "summit",
+             "rock", "desert", "mesa", "ridge", "coral", "sage", "storm"]
+
+
+def _same_name(a, b):
+    """Match rep/caller names the way the Apps Script does (trim + lowercase)."""
+    return (a or "").strip().lower() == (b or "").strip().lower()
+
+
+def _gen_password():
+    """A short, friendly, copy-pasteable password (e.g. 'zion-coral-4f9a')."""
+    return (f"{secrets.choice(_PW_WORDS)}-{secrets.choice(_PW_WORDS)}-"
+            f"{secrets.token_hex(2)}")
+
+
+def _regen_pw():
+    # Runs as a button on_click callback (before the widget re-instantiates), so
+    # it's allowed to set the widget-keyed session value.
+    st.session_state["onb_pw"] = _gen_password()
+
+
+def _do_onboard():
+    """Onboard-button callback. Runs BEFORE the widgets re-instantiate, so it can
+    safely reset the name/password fields (a fresh password every time, so two
+    reps never share one). Stashes the result in onb_flash for display."""
+    url = _sheet_url()
+    name = (st.session_state.get("onb_name") or "").strip()
+    pw = st.session_state.get("onb_pw") or ""
+    reset = bool(st.session_state.get("onb_reset"))
+    who = st.session_state.get("caller", "") or env.get("caller_name", "")
+    if not url or not name:
+        st.session_state["onb_flash"] = {"error": "Enter the rep's name first."}
+        return
+    ok, info = onboard_rep(url, name, pw, created_by=who, reset=reset)
+    if ok:
+        _roster.clear()          # show the new rep in the Assign dropdown right away
+        st.session_state["onb_flash"] = {
+            "name": name, "pw": pw,
+            "verb": "Reset the password for" if info.get("updated") else "Onboarded"}
+        st.session_state["onb_pw"] = _gen_password()   # fresh password for the next rep
+        st.session_state["onb_name"] = ""
+        st.session_state["onb_reset"] = False
+    elif info.get("reason") == "rep_exists":
+        st.session_state["onb_flash"] = {"error":
+            f"A rep named '{name}' already exists. Turn ON 'Reset an existing "
+            "rep's password' below if you meant to change their password."}
+    else:
+        st.session_state["onb_flash"] = {"error": f"Couldn't onboard: {info.get('error') or info}"}
 
 st.set_page_config(page_title="No-Site Finder", page_icon="📞", layout="wide")
 
@@ -67,6 +119,12 @@ def _shared_calls(url):
     """Cached read of the shared Google Sheet (re-checks at most every 30s)."""
     from nichefinder.sheets import fetch_calls
     return fetch_calls(url)
+
+
+@st.cache_data(ttl=30, show_spinner=False)
+def _roster(url):
+    """Cached list of onboarded (active) rep names for the assign dropdown."""
+    return fetch_roster(url)
 
 
 def _sheet_url():
@@ -159,6 +217,38 @@ with st.sidebar:
             _c.set_setting("caller_name", _name.strip())
             st.success("Saved. Calls you log now go to the shared sheet.")
 
+    with st.expander("👥 Onboard a rep"):
+        _osu = _sheet_url()
+        if not _osu:
+            st.caption("Connect the shared Google Sheet above first, then you can "
+                       "create rep logins here.")
+        else:
+            # Result of the last onboard (stashed by the callback so it survives
+            # the rerun and stays on screen for the admin to copy).
+            _of = st.session_state.get("onb_flash")
+            if _of and _of.get("error"):
+                st.error(_of["error"])
+            elif _of:
+                st.success(f"✅ {_of['verb']} **{_of['name']}**.")
+                st.info("**Send them these 3 things:**\n\n"
+                        "1. Your Rep Portal link\n"
+                        f"2. Name: **{_of['name']}**\n"
+                        f"3. Password: **{_of['pw']}**")
+            st.caption("Create a login for a new salesperson. They use the **Rep "
+                       "Portal** — they never see this finder. After onboarding, "
+                       "pick them in the Assign panel to send leads.")
+            if "onb_pw" not in st.session_state:
+                st.session_state["onb_pw"] = _gen_password()
+            st.text_input("Rep's name", key="onb_name", placeholder="e.g. Ben")
+            st.text_input("Password (auto-filled — change it if you want)", key="onb_pw")
+            st.checkbox("Reset an existing rep's password", key="onb_reset",
+                        help="Leave OFF to add a NEW rep. Turn ON only to change "
+                             "the password of a rep who already exists.")
+            oc1, oc2 = st.columns(2)
+            oc1.button("🔄 New password", on_click=_regen_pw, use_container_width=True)
+            oc2.button("✅ Onboard rep", type="primary", on_click=_do_onboard,
+                       use_container_width=True)
+
 # ---------------- run ----------------
 if run:
     bar = st.progress(0.0, text="Starting…")
@@ -226,6 +316,7 @@ df["called"] = df["place_id"].map(lambda p: _state_for(p).get("called", False))
 df["notes"] = df["place_id"].map(lambda p: _state_for(p).get("notes", ""))
 if sheet_url:
     df["called_by"] = df["place_id"].map(lambda p: shared.get(p, {}).get("called_by", ""))
+    df["assigned_to"] = df["place_id"].map(lambda p: shared.get(p, {}).get("assigned_to", ""))
     if sync_err:
         st.caption(f"⚠️ Couldn't reach the shared sheet just now — showing this "
                    f"computer's marks. ({sync_err})")
@@ -245,9 +336,9 @@ st.subheader("Your call list — highest-priority first")
 st.caption("Tick **Called?** and jot **Notes** as you dial, then hit 💾 Save. "
            "It remembers across runs (keyed to each Google listing).")
 
-view_cols = ["called", "called_by", "priority", "score", "name", "phone",
-             "website_status", "rating", "reviews", "city", "state", "address",
-             "maps_url", "notes", "place_id"]
+view_cols = ["called", "called_by", "assigned_to", "priority", "score", "name",
+             "phone", "website_status", "rating", "reviews", "city", "state",
+             "address", "maps_url", "notes", "place_id"]
 view_cols = [c for c in view_cols if c in df.columns]
 
 edited = st.data_editor(
@@ -256,6 +347,8 @@ edited = st.data_editor(
     column_config={
         "called": st.column_config.CheckboxColumn("Called?"),
         "called_by": st.column_config.TextColumn("By", width="small"),
+        "assigned_to": st.column_config.TextColumn("Owner (rep)", width="small",
+            help="If a rep owns this lead, it's theirs to call — don't cold-call it here."),
         "priority": st.column_config.TextColumn("Priority", width="small"),
         "score": st.column_config.NumberColumn("Score", format="%d", width="small"),
         "name": st.column_config.TextColumn("Business", width="large"),
@@ -268,15 +361,16 @@ edited = st.data_editor(
         "notes": st.column_config.TextColumn("Notes", width="large"),
         "place_id": None,   # hide, but keep it for saving
     },
-    disabled=["called_by", "priority", "score", "name", "phone", "website_status",
-              "rating", "reviews", "city", "state", "address", "maps_url"],
+    disabled=["called_by", "assigned_to", "priority", "score", "name", "phone",
+              "website_status", "rating", "reviews", "city", "state", "address",
+              "maps_url"],
 )
 
 col_save, col_dl = st.columns([1, 3])
 if col_save.button("💾  Save call log", use_container_width=True):
     cache = Cache()
     caller = st.session_state.get("caller", "") or env.get("caller_name", "")
-    saved_n, sent_n, errs = 0, 0, []
+    saved_n, sent_n, skipped_owned, errs = 0, 0, 0, []
     with st.spinner("Saving…"):
         for _, r in edited.iterrows():
             pid = r["place_id"]
@@ -289,8 +383,20 @@ if col_save.button("💾  Save call log", use_container_width=True):
             # already there (the sheet upserts by place_id, so no duplicates).
             if sheet_url and called:
                 prev = shared.get(pid, {})
+                # Don't stamp a call over a lead a rep already owns — that's how
+                # a business gets called twice. Leave it to the rep. (The Apps
+                # Script refuses this server-side too; this just avoids the call.)
+                owner = prev.get("assigned_to", "")
+                prev_by = prev.get("called_by", "")
+                # Don't stamp a call over a lead someone else owns OR already
+                # called — either way that's a double-call. Leave it as-is. (The
+                # Apps Script refuses this server-side too; this avoids the call.)
+                if (owner and not _same_name(owner, caller)) or \
+                   (prev.get("called") and prev_by and not _same_name(prev_by, caller)):
+                    skipped_owned += 1
+                    continue
                 unchanged = (prev.get("called") and prev.get("notes", "") == note
-                             and prev.get("called_by", "") == caller)
+                             and _same_name(prev_by, caller))
                 if unchanged:
                     continue
                 payload = {
@@ -312,6 +418,9 @@ if col_save.button("💾  Save call log", use_container_width=True):
     done = f"Saved {saved_n} call-log entries."
     if sheet_url:
         done += f"  Sent {sent_n} update(s) to the shared Google Sheet."
+        if skipped_owned:
+            done += (f"  Skipped {skipped_owned} already worked by someone else "
+                     "(left as-is, so nobody's called twice).")
         _shared_calls.clear()   # so the refreshed marks show for both of you
     st.success(done)
     if errs:
@@ -322,6 +431,78 @@ col_dl.download_button(
     df.drop(columns=["called", "notes"]).to_csv(index=False).encode(),
     file_name=f"leads_{(out['niche'] or 'search')}.csv", mime="text/csv",
     use_container_width=True)
+
+# ---------------- assign to a rep ----------------
+# Hand a batch of these leads to a salesperson. They land in the shared Sheet
+# tagged to that rep, who then works them in the Rep Portal. Exclusivity is
+# enforced two ways: we skip any place_id already in the Sheet (dedup below),
+# and the Apps Script refuses to assign a lead that's already claimed/called —
+# so no two reps ever get, or call, the same business.
+st.markdown("---")
+st.subheader("📤 Assign leads to a rep")
+if not sheet_url:
+    st.caption("Connect the shared Google Sheet first (sidebar → 🔗 Shared Google "
+               "Sheet) to hand leads to a rep.")
+else:
+    # Prefer the live roster (reps onboarded via the sidebar); fall back to the
+    # config list, then a free-typed name.
+    reps = _roster(sheet_url) or [str(x) for x in (cfg.get("reps") or [])]
+    ac1, ac2, ac3 = st.columns([2, 1, 1])
+    with ac1:
+        if reps:
+            rep_pick = st.selectbox("Assign to", reps + ["➕ someone else…"])
+            rep_name = (st.text_input("New rep's name (onboard them first, above)")
+                        if rep_pick == "➕ someone else…" else rep_pick)
+        else:
+            rep_name = st.text_input(
+                "Rep's name", placeholder="e.g. Ben",
+                help="Onboard the rep first (sidebar → 👥 Onboard a rep) so they can log in.")
+    with ac2:
+        how_many = st.number_input("How many (top leads)", min_value=1,
+                                   max_value=len(leads), value=min(40, len(leads)), step=1)
+    with ac3:
+        st.write("")
+        st.write("")
+        go_assign = st.button(f"📤 Assign top {int(how_many)}", use_container_width=True,
+                              disabled=not (rep_name or "").strip())
+    if go_assign and (rep_name or "").strip():
+        worked, werr = fetch_worked_place_ids(sheet_url)
+        today = date.today().isoformat()
+        assigned, skipped, failed = 0, 0, []
+        with st.spinner(f"Assigning to {rep_name}…"):
+            for ld in leads:
+                if assigned >= int(how_many):
+                    break
+                pid = ld.get("place_id", "")
+                if pid in worked:          # already handed out / called by someone
+                    skipped += 1
+                    continue
+                payload = {
+                    "business": ld.get("name", ""), "phone": ld.get("phone", ""),
+                    "website_status": ld.get("website_status", ""),
+                    "rating": None if pd.isna(ld.get("rating")) else ld.get("rating"),
+                    "reviews": int(ld.get("reviews") or 0), "score": int(ld.get("score") or 0),
+                    "priority": ld.get("priority", ""), "city": ld.get("city", ""),
+                    "state": ld.get("state", ""), "address": ld.get("address", ""),
+                    "maps_url": ld.get("maps_url", ""), "place_id": pid,
+                    "assigned_to": rep_name.strip(), "assigned_date": today,
+                }
+                ok, info = assign_lead(sheet_url, payload)
+                if not ok:
+                    failed.append(info.get("error", "?"))
+                elif info.get("skipped"):     # server refused (already claimed)
+                    skipped += 1
+                else:
+                    assigned += 1
+        msg = f"✅ Assigned **{assigned}** lead(s) to **{rep_name.strip()}**."
+        if skipped:
+            msg += f"  Skipped {skipped} already-worked by the team (no double-calls)."
+        st.success(msg)
+        if werr:
+            st.caption(f"⚠️ Couldn't pre-check the sheet for duplicates ({werr}) — "
+                       "the server still blocked any that were already claimed.")
+        if failed:
+            st.warning(f"{len(failed)} didn't send (check the sheet link): {failed[0]}")
 
 # ---------------- map ----------------
 mp = df.dropna(subset=["lat", "lng"])[["lat", "lng"]] if {"lat", "lng"} <= set(df.columns) else None

@@ -5,6 +5,12 @@
 #  buyer-intent keywords, national CPC, job value, saturation, and a verdict.
 # ============================================================================
 
+# --- Sales reps (populate the "Assign to a rep" dropdown in No-Site Finder) ---
+# Each name MUST match the name that rep logs into the Rep Portal with, so their
+# assigned leads route to the right person. You can also type a name on the fly.
+reps:
+  - Ben
+
 settings:
   # --- City universe (Gate B geography) ---
   population_min: 15000        # floor: 15k so small satellite towns (Hurricane UT) qualify
