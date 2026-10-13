@@ -11,6 +11,7 @@ Two tabs: 📞 Call list (businesses with a phone) and 💬 Social DM list (thei
 Facebook / Instagram pages, to message instead of calling; see dm_tab.py).
 """
 
+import glob
 import os
 import secrets
 import sys
@@ -20,6 +21,22 @@ import pandas as pd
 import streamlit as st
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Streamlit keeps imported modules alive between reruns. After a code update
+# (git push -> the host pulls new files) an old copy of nichefinder lingered and
+# broke the new imports (ImportError on the hosted app, 10-13). So whenever any
+# of our files changed since the last run, or nichefinder was loaded from some
+# other folder, drop our modules and import them fresh.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_OURS = glob.glob(os.path.join(_HERE, "nichefinder", "*.py")) + [os.path.join(_HERE, "dm_tab.py")]
+_sig = str(max(os.path.getmtime(f) for f in _OURS if os.path.exists(f)))
+_pkg = sys.modules.get("nichefinder")
+_foreign = _pkg is not None and not (getattr(_pkg, "__file__", "") or "").startswith(_HERE)
+if os.environ.get("_NSF_CODE_SIG") != _sig or _foreign:
+    for _m in [m for m in sys.modules
+               if m in ("nichefinder", "dm_tab") or m.startswith("nichefinder.")]:
+        del sys.modules[_m]
+    os.environ["_NSF_CODE_SIG"] = _sig
 
 from nichefinder.cache import Cache
 from nichefinder.cities import cities_source
