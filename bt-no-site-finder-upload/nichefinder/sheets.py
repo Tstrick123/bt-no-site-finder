@@ -161,3 +161,62 @@ def fetch_roster(url, timeout=15):
         return []
     except Exception:
         return []
+
+
+# ---- 💬 Social DM list (the sheet's "DMs" tab) ----
+DM_STATUSES = ["Sent", "Replied", "Interested", "Sold", "Not interested"]
+
+
+def fetch_dms(url, timeout=15):
+    """Read the shared DM log. Returns (dict, error_message, supported).
+
+    dict maps place_id -> {dm_status, via, messaged_by, facebook, instagram,
+    match, note}. `supported` is False when the sheet still runs the OLD Apps
+    Script (no DMs tab yet): that script ignores ?dms=1 and answers with the
+    call log as a bare list, so we must NOT treat it as DM data, and must not
+    POST DMs to it either (the old script would log them as phone calls).
+    """
+    if not url:
+        return {}, "no sheet configured", False
+    try:
+        r = requests.get(url, params={"dms": "1"}, timeout=timeout)
+        if r.status_code != 200:
+            return {}, f"HTTP {r.status_code}", False
+        data = r.json()
+        if not isinstance(data, dict) or "dms" not in data:
+            return {}, "sheet script needs the DM update", False
+        out = {}
+        for row in data.get("dms") or []:
+            pid = str(row.get("place_id", "")).strip()
+            if not pid or pid.lower() == "place_id":
+                continue
+            out[pid] = {k: str(row.get(k, "") or "") for k in
+                        ("dm_status", "via", "messaged_by", "facebook",
+                         "instagram", "match", "note")}
+        return out, "", True
+    except Exception as e:
+        return {}, str(e)[:160], False
+
+
+def post_dm(url, row, timeout=15):
+    """Save ONE DM row (action=dm). Returns (ok, info).
+
+    The Apps Script upserts it into the "DMs" tab by place_id and refuses to
+    overwrite a business someone ELSE already messaged (info.skipped=True).
+    Only call this after fetch_dms() reported supported=True.
+    """
+    if not url:
+        return False, {"error": "no sheet configured"}
+    payload = dict(row)
+    payload["action"] = "dm"
+    try:
+        r = requests.post(url, json=_with_token(payload), timeout=timeout)
+        if r.status_code not in (200, 201, 302):
+            return False, {"error": f"HTTP {r.status_code}: {r.text[:120]}"}
+        try:
+            info = r.json()
+        except Exception:
+            return False, {"error": "sheet didn't confirm the save"}
+        return bool(info.get("ok")), info
+    except Exception as e:
+        return False, {"error": str(e)[:160]}

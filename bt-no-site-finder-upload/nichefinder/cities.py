@@ -59,3 +59,32 @@ def select_cities(df, settings, region=None):
         out = out[out["city"].str.strip().str.lower().isin(wanted)]
 
     return out.sort_values("population", ascending=False).reset_index(drop=True)
+
+
+def major_metros(df, n=25, min_separation_km=45):
+    """The N biggest US cities, ignoring the rankability population ceiling.
+
+    select_cities() caps population at 400k on purpose: Niche Finder is looking
+    for markets we could realistically RANK a new site in. This function exists
+    for the opposite job — outreach, where we want the dense metros precisely
+    because they hold the most businesses.
+
+    Adjacent suburbs are dropped. The Places scan covers a 50km radius, so
+    scanning Phoenix and then Glendale (14km away) would return substantially
+    the same businesses and bill twice for them. We keep the larger city and
+    skip anything inside min_separation_km of one already chosen.
+    """
+    from .nosite import _haversine_km
+
+    ranked = df.sort_values("population", ascending=False).reset_index(drop=True)
+    picked, coords = [], []
+    for _, row in ranked.iterrows():
+        lat, lng = float(row["lat"]), float(row["lng"])
+        if any(_haversine_km(lat, lng, plat, plng) < min_separation_km
+               for plat, plng in coords):
+            continue
+        picked.append(row)
+        coords.append((lat, lng))
+        if len(picked) >= n:
+            break
+    return pd.DataFrame(picked).reset_index(drop=True)

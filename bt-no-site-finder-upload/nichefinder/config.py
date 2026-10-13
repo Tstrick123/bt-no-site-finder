@@ -30,6 +30,8 @@ def load_env():
     dfs_login = os.getenv("DATAFORSEO_LOGIN", "").strip()
     dfs_pw = os.getenv("DATAFORSEO_PASSWORD", "").strip()
     places_key = os.getenv("GOOGLE_PLACES_API_KEY", "").strip()
+    serper_key = os.getenv("SERPER_API_KEY", "").strip()   # DM list's social-page search
+    tavily_key = os.getenv("TAVILY_API_KEY", "").strip()   # (Tavily is preferred)
     sheet_webhook = os.getenv("GOOGLE_SHEET_WEBHOOK_URL", "").strip()
     caller_name = os.getenv("CALLER_NAME", "").strip()
     # MOCK_MODE=false only counts if it's literally "false"
@@ -39,11 +41,17 @@ def load_env():
                     "your_google_maps_api_key_here"}
     have_dfs = dfs_login not in placeholders and dfs_pw not in placeholders
     have_places = places_key not in placeholders
+    if serper_key in placeholders or serper_key == "your_serper_key_here":
+        serper_key = ""
+    if tavily_key in placeholders or tavily_key == "your_tavily_key_here":
+        tavily_key = ""
 
     return {
         "dataforseo_login": dfs_login,
         "dataforseo_password": dfs_pw,
         "google_places_key": places_key,
+        "serper_key": serper_key,
+        "tavily_key": tavily_key,
         "mock_requested": mock_flag,
         "have_dataforseo": have_dfs,
         "have_places": have_places,

@@ -511,3 +511,311 @@ niches:
     saturation: low
     recommended: true
     verdict: "Tate's pick — genuinely under-contested by rank-and-rent operators and high-ticket ($2k-15k+ bookings). Model nuance: a single venue is a fixed building, so classic exclusive-lead renting doesn't fit directly — monetize via (a) a multi-venue directory / featured listings, (b) renting inquiries to a wedding planner/coordinator, or (c) a marketing retainer with one venue. Lower CPC (~$4) but the ticket size is the whole point."
+
+  # ==========================================================================
+  #  HIGH-TICKET PROFESSIONAL & REMODELING (added 2026-09-10)
+  #  Legal / dental / restoration / big remodels. High client value; a mix of
+  #  IG activity (remodel/pool/cosmetic-dental post; lawyers/HVAC mostly don't).
+  # ==========================================================================
+  criminal_defense_lawyer:
+    display_name: "Criminal Defense Lawyer"
+    category: legal
+    keywords: [criminal defense lawyer, criminal defense attorney, dui lawyer, criminal attorney near me, criminal defense law firm, dui attorney, defense attorney]
+    national_cpc: 60.0
+    job_value: 7500
+    job_value_low: 2500
+    job_value_high: 25000
+    lead_value: 300
+    saturation: high
+    recommended: true
+    verdict: "Very high retainer value and CPC. Local defense firms often have thin, unoptimized profiles. Not IG-active as a rule, so pitch by email/call over DM."
+
+  personal_injury_lawyer:
+    display_name: "Personal Injury Lawyer"
+    category: legal
+    keywords: [personal injury lawyer, personal injury attorney, car accident lawyer, injury attorney near me, accident attorney, personal injury law firm]
+    national_cpc: 90.0
+    job_value: 15000
+    job_value_low: 3000
+    job_value_high: 100000
+    lead_value: 500
+    saturation: high
+    recommended: true
+    verdict: "Highest-value legal vertical (contingency fees). Heavily marketed by big firms, but small local practices with weak GBPs exist. Email/call over DM."
+
+  family_dentist:
+    display_name: "Family & General Dentist"
+    category: dental
+    keywords: [family dentist, general dentist, dentist near me, dental office, family dental, dental clinic]
+    national_cpc: 12.0
+    job_value: 1800
+    job_value_low: 300
+    job_value_high: 6000
+    lead_value: 120
+    saturation: high
+    recommended: true
+    verdict: "High patient lifetime value; many single-location practices under-optimize photos and reviews. Some are IG-active (office-culture posts)."
+
+  cosmetic_dentist:
+    display_name: "Cosmetic Dentist (Veneers / Implants)"
+    category: dental
+    keywords: [cosmetic dentist, veneers dentist, dental implants, cosmetic dentistry near me, smile makeover, implant dentist]
+    national_cpc: 15.0
+    job_value: 12000
+    job_value_low: 3000
+    job_value_high: 50000
+    lead_value: 250
+    saturation: medium
+    recommended: true
+    verdict: "Very high ticket (full-mouth veneers/implants) and genuinely IG-active (before/after smiles). Strong DM + Loom fit."
+
+  mold_remediation:
+    display_name: "Mold Remediation & Removal"
+    category: restoration
+    keywords: [mold remediation, mold removal, mold removal company, mold remediation near me, black mold removal, mold inspection]
+    national_cpc: 14.0
+    job_value: 4000
+    job_value_low: 1500
+    job_value_high: 10000
+    lead_value: 120
+    saturation: medium
+    recommended: true
+    verdict: "Urgent, high-ticket restoration work with light IG presence. Pitch by email/call. Cousin of the existing water_fire_restoration niche."
+
+  kitchen_remodeling:
+    display_name: "Kitchen Remodeling"
+    category: remodeling
+    keywords: [kitchen remodeling, kitchen remodel, kitchen renovation, kitchen remodeling contractor, kitchen remodel near me, kitchen remodeling company]
+    national_cpc: 12.0
+    job_value: 30000
+    job_value_low: 15000
+    job_value_high: 80000
+    lead_value: 300
+    saturation: medium
+    recommended: true
+    verdict: "Big-ticket remodel; remodelers are often quite IG-active (project photos). Good DM + Loom fit and high client value."
+
+  bathroom_remodeling:
+    display_name: "Bathroom Remodeling"
+    category: remodeling
+    keywords: [bathroom remodeling, bathroom remodel, bathroom renovation, bathroom remodeling contractor, bathroom remodel near me, shower remodel]
+    national_cpc: 11.0
+    job_value: 18000
+    job_value_low: 8000
+    job_value_high: 40000
+    lead_value: 250
+    saturation: medium
+    recommended: true
+    verdict: "High-ticket remodel, often IG-active. Pairs naturally with kitchen_remodeling."
+
+  home_remodeling:
+    display_name: "Home Remodeling / General Contractor"
+    category: remodeling
+    keywords: [home remodeling, general contractor, home renovation, remodeling contractor near me, whole home remodel, home addition contractor]
+    national_cpc: 10.0
+    job_value: 45000
+    job_value_low: 15000
+    job_value_high: 150000
+    lead_value: 350
+    saturation: medium
+    recommended: true
+    verdict: "Whole-home remodels; very high ticket, remodelers post projects on IG. Broad category, expect a mix."
+
+  pool_builder:
+    display_name: "Pool Builder / Pool Construction"
+    category: outdoor
+    keywords: [pool builder, inground pool installation, swimming pool contractor, custom pool builder, pool company near me, pool construction]
+    national_cpc: 9.0
+    job_value: 65000
+    job_value_low: 40000
+    job_value_high: 120000
+    lead_value: 400
+    saturation: low
+    recommended: true
+    verdict: "Highest home ticket here (custom inground pools). Builders are IG-active (backyard reveals). Strong DM + Loom fit, low saturation in many metros."
+
+  roofing:
+    display_name: "Roofing Contractor"
+    category: roofing
+    keywords: [roofing contractor, roofer near me, roof replacement, roofing company, roof repair, metal roofing]
+    national_cpc: 15.0
+    job_value: 14000
+    job_value_low: 6000
+    job_value_high: 30000
+    lead_value: 200
+    saturation: high
+    recommended: true
+    verdict: "Staple high-ticket trade that was missing from the library. Saturated, but weak-GBP roofers are still common (see the live SLC test). Not very IG-active."
+
+  hvac:
+    display_name: "HVAC Install & Repair"
+    category: hvac
+    keywords: [hvac contractor, air conditioning repair, hvac near me, furnace repair, ac installation, heating and cooling company]
+    national_cpc: 14.0
+    job_value: 7000
+    job_value_low: 3000
+    job_value_high: 15000
+    lead_value: 150
+    saturation: high
+    recommended: true
+    verdict: "Staple trade, high install ticket. Not IG-active; pitch by call/email."
+
+  solar_installation:
+    display_name: "Solar Panel Installation"
+    category: solar
+    keywords: [solar installation, solar panel installation, solar company near me, residential solar installer, solar panel company]
+    national_cpc: 18.0
+    job_value: 25000
+    job_value_low: 15000
+    job_value_high: 40000
+    lead_value: 300
+    saturation: medium
+    recommended: true
+    verdict: "Very high ticket. Somewhat IG-active. Watch for national installers crowding local results."
+
+  # ==========================================================================
+  #  INSTAGRAM-ACTIVE / CONSUMER NICHES (added 2026-09-10)
+  #  Owners live on Instagram (visual, appointment-based) = best DM fit for Ben.
+  # ==========================================================================
+  med_spa:
+    display_name: "Med Spa / Medical Aesthetics"
+    category: aesthetics
+    keywords: [med spa, medical spa, botox near me, med spa near me, aesthetics clinic, medical aesthetics, injectables]
+    national_cpc: 10.0
+    job_value: 1200
+    job_value_low: 300
+    job_value_high: 6000
+    lead_value: 150
+    saturation: medium
+    recommended: true
+    verdict: "TOP DM pick for Ben: med spas are among the most IG-active businesses AND high LTV (memberships, packages). Owners run their own Instagram."
+
+  plastic_surgery:
+    display_name: "Plastic / Cosmetic Surgery"
+    category: aesthetics
+    keywords: [plastic surgeon, cosmetic surgery, plastic surgery near me, cosmetic surgeon, breast augmentation, liposuction]
+    national_cpc: 20.0
+    job_value: 12000
+    job_value_low: 4000
+    job_value_high: 30000
+    lead_value: 350
+    saturation: medium
+    recommended: true
+    verdict: "Very high ticket and heavily IG-driven (before/after). Great DM + Loom fit."
+
+  hair_salon:
+    display_name: "Hair Salon & Extensions"
+    category: beauty
+    keywords: [hair salon, hair extensions, hair salon near me, balayage, hair color salon, keratin treatment]
+    national_cpc: 6.0
+    job_value: 600
+    job_value_low: 150
+    job_value_high: 3000
+    lead_value: 80
+    saturation: high
+    recommended: true
+    verdict: "Extremely IG-active (color/extension transformations). Lower ticket, but the DM fit is perfect and volume is high."
+
+  lash_brow_studio:
+    display_name: "Lash, Brow & PMU Studio"
+    category: beauty
+    keywords: [lash extensions, eyebrow microblading, lash studio near me, permanent makeup, brow lamination, lash lift]
+    national_cpc: 5.0
+    job_value: 400
+    job_value_low: 100
+    job_value_high: 1200
+    lead_value: 60
+    saturation: high
+    recommended: true
+    verdict: "IG-native industry (booked almost entirely off Instagram). Lower ticket but owners are hyper-active on IG."
+
+  tattoo_studio:
+    display_name: "Tattoo Studio"
+    category: creative
+    keywords: [tattoo shop, tattoo studio near me, tattoo artist, custom tattoo, tattoo parlor]
+    national_cpc: 4.0
+    job_value: 800
+    job_value_low: 150
+    job_value_high: 3000
+    lead_value: 70
+    saturation: high
+    recommended: true
+    verdict: "Portfolio-on-Instagram business. Strong DM fit; medium ticket."
+
+  auto_detailing:
+    display_name: "Auto Detailing & Ceramic Coating"
+    category: auto
+    keywords: [auto detailing, car detailing near me, ceramic coating, mobile detailing, paint correction]
+    national_cpc: 7.0
+    job_value: 900
+    job_value_low: 150
+    job_value_high: 3000
+    lead_value: 90
+    saturation: medium
+    recommended: true
+    verdict: "Before/after content lives on IG; ceramic coating pushes the ticket up. Good DM fit."
+
+  wedding_photographer:
+    display_name: "Wedding & Portrait Photographer"
+    category: creative
+    keywords: [wedding photographer, photographer near me, portrait photographer, engagement photographer, family photographer]
+    national_cpc: 6.0
+    job_value: 3500
+    job_value_low: 500
+    job_value_high: 8000
+    lead_value: 120
+    saturation: high
+    recommended: true
+    verdict: "IG-native and decent ticket ($2-8k weddings). Owners run their IG as a portfolio."
+
+  interior_designer:
+    display_name: "Interior Designer"
+    category: creative
+    keywords: [interior designer, interior design near me, interior decorator, home interior design, interior design firm]
+    national_cpc: 9.0
+    job_value: 12000
+    job_value_low: 3000
+    job_value_high: 50000
+    lead_value: 250
+    saturation: medium
+    recommended: true
+    verdict: "Very IG-active and high project value. Excellent DM + Loom fit."
+
+  personal_trainer:
+    display_name: "Personal Trainer / Fitness Studio"
+    category: fitness
+    keywords: [personal trainer, personal training near me, fitness studio, gym near me, group fitness, pilates studio]
+    national_cpc: 7.0
+    job_value: 1500
+    job_value_low: 300
+    job_value_high: 4000
+    lead_value: 90
+    saturation: high
+    recommended: true
+    verdict: "Coaches/studios are very IG-active; packages/memberships give decent LTV. Good DM fit."
+
+  real_estate_agent:
+    display_name: "Real Estate Agent"
+    category: realestate
+    keywords: [real estate agent, realtor near me, real estate agent near me, listing agent, real estate office]
+    national_cpc: 8.0
+    job_value: 10000
+    job_value_low: 5000
+    job_value_high: 30000
+    lead_value: 200
+    saturation: high
+    recommended: true
+    verdict: "Agents are heavily IG-active and commissions are large, but competition for their marketing dollar is fierce. Strong DM fit; qualify hard."
+
+  wedding_event_planner:
+    display_name: "Wedding & Event Planner"
+    category: creative
+    keywords: [wedding planner, event planner near me, wedding coordinator, event planning company, party planner]
+    national_cpc: 6.0
+    job_value: 4000
+    job_value_low: 2000
+    job_value_high: 10000
+    lead_value: 120
+    saturation: medium
+    recommended: true
+    verdict: "IG-active and good ticket. Pairs with the existing wedding_venues / party_event_rental angle."

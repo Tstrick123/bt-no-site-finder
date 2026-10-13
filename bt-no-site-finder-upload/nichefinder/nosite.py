@@ -156,11 +156,15 @@ def classify_website(url):
     return REAL
 
 
-def is_lead(flavor, phone, status):
-    """A row is a callable lead iff it's operational, reachable, and no real site."""
+def is_lead(flavor, phone, status, require_phone=True):
+    """A row is a callable lead iff it's operational, reachable, and no real site.
+
+    require_phone=False keeps phone-less businesses too (the DM list reaches
+    them on Facebook/Instagram, so a missing phone doesn't matter there).
+    """
     if status and status not in ("OPERATIONAL", "BUSINESS_STATUS_UNSPECIFIED"):
         return False
-    if not phone:
+    if require_phone and not phone:
         return False
     return flavor != REAL
 
@@ -350,11 +354,12 @@ def _places_mock(env):
 
 
 def find_leads(query=None, niche_key=None, region_key=None, limit=None,
-               states=None, progress=None, min_score=0):
+               states=None, progress=None, min_score=0, require_phone=True):
     """Return a ranked cold-call list of no-website businesses.
 
     Search term comes from `query` (any free text) if given, else from the
     niche's keywords. `niche_key` still adds ticket context to each row.
+    require_phone=False also keeps businesses with no phone (for the DM list).
     """
     cfg = load_config()
     env = load_env()
@@ -396,7 +401,7 @@ def find_leads(query=None, niche_key=None, region_key=None, limit=None,
                             and _haversine_km(lat, lng, blat, blng) > MAX_RADIUS_KM):
                         continue   # Google ranged out of the target area — drop it
                     flavor = classify_website(b.get("website"))
-                    if not is_lead(flavor, b.get("phone"), b.get("status")):
+                    if not is_lead(flavor, b.get("phone"), b.get("status"), require_phone):
                         continue
                     score = score_lead(flavor, b.get("rating"), b.get("reviews"))
                     if score < min_score:
