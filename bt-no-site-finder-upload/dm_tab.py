@@ -93,9 +93,11 @@ def render(leads, mock, env, sheet_url, caller, shared_calls, dm_state):
     if not sheet_url:
         st.caption("Not connected to the shared Google Sheet, so DMs save on this computer only.")
     elif not dm_shared:
-        st.warning("**The shared Google Sheet needs its one-time DM update** (DM_LIST.md, "
-                   "step 2) before DMs can sync between you and Ben. Until then DMs save on "
-                   f"this computer only, and the hosted app forgets them on restart. ({dm_err})")
+        # Tate chose (10-13) not to install the sheet's v3 script, so this is a
+        # quiet note, not a to-do. DMs live in the app's own log until then.
+        st.caption("DMs are saved inside this app (not the Google Sheet), so they reset "
+                   "if the app restarts. Sheet sync turns on if the DM script is ever "
+                   "installed (DM_LIST.md, step 2).")
     else:
         sc1, sc2 = st.columns([4, 1])
         n_dm = sum(1 for d in dms.values() if d.get("dm_status"))
